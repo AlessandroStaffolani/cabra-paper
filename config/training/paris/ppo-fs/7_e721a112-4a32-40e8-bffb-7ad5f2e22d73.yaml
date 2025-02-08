@@ -1,0 +1,427 @@
+emulator:
+  model:
+    cdrc_data_model:
+      episode_length: 1W 604800t
+      eval_dataset_path: datasets/cdrc/1-zones/paris/dataset-evaluation/dataset.json
+      eval_every_week: false
+      nodes_path: datasets/cdrc/1-zones/paris/dataset-training/nodes.json
+      store_demand_stats: false
+      train_dataset_path: datasets/cdrc/1-zones/paris/dataset-training/dataset.json
+      update_frequency: 10m 600t
+    realdata_model:
+      episode_length: 1W 604800t
+      eval_dataset_path: datasets/citibike-zones/5-zones_nodes-evaluation/dataset.json
+      nodes_path: datasets/citibike-zones/5-zones_nodes-training/nodes.json
+      train_dataset_path: datasets/citibike-zones/5-zones_nodes-training/dataset.json
+      update_frequency: 10m 600t
+      weather_info_path: datasets/citibike-zones/weather_info.json
+    synthetic_model:
+      gaussian_noise:
+        mean: 0
+        std: 2.5
+      movement_range:
+      - 0.3
+      - 1.1
+    test_data_model:
+      episode_length: 1W 604800t
+      max_date: '2022-02-01'
+      min_date: '2022-01-01'
+      nodes_in_shortage: 2
+      shuffle_frequency: 1w 86400t
+      test_nodes:
+        n_nodes: 4
+        nodes_bikes_percentage: 0.6
+        nodes_capacity_avg: 60
+        nodes_capacity_std: 6
+        nodes_distance_avg: 500
+        nodes_distance_std: 50
+        nodes_path: datasets/test_data/4_nodes/nodes.json
+      update_frequency: 10m 600t
+    type: cdrc-data
+    use_predictions: false
+environment:
+  action_space:
+    add_wait_space: false
+    discretize_mode: greedy
+    min_quantity: 0
+    quantity_movements:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    use_continuous_action_space: false
+  agent:
+    actor_critic:
+      batch_size: 900
+      gamma: 0.99
+      learning_rate: 0.005
+      n_actor_updates_per_agent_update: 1
+      n_agent_train_steps_per_iter: 1
+      n_critic_updates_per_agent_update: 1
+      n_grad_steps_per_target_update: 10
+      n_target_updates: 10
+      net_addition_parameters:
+        hidden_units:
+        - 32
+        - 64
+        - 64
+        - 32
+        activation: relu
+        batch_normalization: false
+      net_type: fully-connected
+      standardize_advantage: true
+    branching_dqn:
+      batch_size: 128
+      bootstrap_steps: 500
+      epsilon_parameters:
+        start: 1
+        end: 0.001
+        total: 500
+        decay: 1800
+      epsilon_type: linear-decay
+      gamma: 0.99
+      learning_rate: 0.0001
+      q_net_addition_parameters:
+        hidden_units:
+        - 256
+        - 128
+        - 128
+        - 64
+        branch_layers:
+        - 64
+        - 32
+        activation: relu
+        batch_normalization: true
+        reduce_method: mean
+      replay_buffer:
+        alpha: 0.6
+        beta: 0.4
+        beta_annealing_steps: 10000
+        capacity: 3000
+        enabled: true
+        prioritized_epsilon: 1.0e-06
+        type: prioritized-buffer
+      target_net_update_frequency: 168
+      td_target_method: mean
+      use_cnn: false
+    double_dqn:
+      batch_size: 128
+      bootstrap_steps: 2500
+      epsilon_parameters:
+        start: 1
+        end: 0.001
+        total: 5000
+        decay: 1800
+      epsilon_type: linear-decay
+      gamma: 0.99
+      learning_rate: 0.01
+      lr_scheduler: constant
+      q_net_addition_parameters:
+        hidden_units:
+        - 128
+        - 128
+        - 64
+        - 64
+        batch_normalization: true
+        activation: relu
+      q_net_type: dueling
+      replay_buffer:
+        alpha: 0.6
+        beta: 0.4
+        beta_annealing_steps: 10000
+        capacity: 3000
+        enabled: true
+        prioritized_epsilon: 1.0e-06
+        type: prioritized-buffer
+      target_net_update_frequency: 1048
+      train_steps_with_constraints: 0
+      updates_per_step: 1
+      use_cnn: false
+    global_parameters: {}
+    model_load:
+      load_model: false
+      load_model_config:
+        base_path: ''
+        mode: disk
+        path: null
+        use_ssh_tunnel: false
+    n_steps_oracle:
+      look_ahead_steps: 1
+    ppo:
+      activation_func: relu
+      add_batch_normalization: false
+      batch_size: 512
+      clip_range: 0.2
+      clip_range_vf: null
+      deterministic_eval: true
+      ent_coef: 0.05
+      force_constraints_swap: false
+      gae_lambda: 0.95
+      gamma: 0.9
+      log_std_init: 0
+      lr: 0.0003
+      lr_scheduler: constant
+      max_grad_norm: 0.5
+      n_epochs: 10
+      n_steps: 2048
+      normalize_advantage: true
+      override_activation_func: false
+      override_batch_normalization: false
+      policy_layers:
+      - activation: tanh
+        add_batch_normalization: true
+        units: 128
+      - activation: tanh
+        add_batch_normalization: true
+        units: 64
+      prevent_penalties: true
+      shared_net_cnn: []
+      shared_net_fcl:
+      - activation: tanh
+        add_batch_normalization: true
+        units: 512
+      - activation: tanh
+        add_batch_normalization: true
+        units: 512
+      target_kl: null
+      train_frequency: 1
+      train_steps_with_constraints: 0
+      value_layers:
+      - activation: tanh
+        add_batch_normalization: true
+        units: 128
+      - activation: tanh
+        add_batch_normalization: true
+        units: 64
+      vf_coef: 0.5
+    type: ppo-fs
+  constrained_space:
+    critical_threshold: 0.2
+    max_distance: 1200000
+    zone_max_distance: 1200000
+    zones_filtered_size: 5
+  nodes:
+    critical_normalized: true
+    critical_threshold: 0.2
+    distance_mode: l1
+    generated_config:
+      bikes_percentage: 0.6
+      total_slots_avg: 40
+      total_slots_std: 5
+    loaded_config:
+      bikes_percentage: 0.45
+      bikes_percentage_from_data: true
+      nodes_load_path: datasets/cdrc/1-zones/paris/dataset-training/nodes.json
+      normalize_coordinates: true
+      zones_load_path: datasets/cdrc/1-zones/paris/dataset-training/zones.json
+    n_nodes: 1453
+    nodes_config: loaded
+    nodes_features:
+    - bikes
+    - position
+    shortage_threshold: 0
+    use_predictions: false
+  reward:
+    disable_cost: false
+    gamma: 1.02
+    invalid_action_penalty: -100
+    parameters:
+      normalize_cost: true
+      shortage_weight: 0.5
+      environment_shortage_weight: 1
+      cost_weight: 0.5
+    solved_bonus: 1
+    training_scaler: 1
+    type: global-shortage-and-cost
+  state:
+    additional_properties:
+      units_to_skip:
+      - second_step
+      - second
+      - minute
+      - week
+      - year
+      - total_steps
+    common_features:
+    - current-zone
+    - current-truck
+    - truck-features
+    - dataset-time
+    normalized: true
+    quantity_features: []
+    stack_n_states: 1
+    target_features: []
+    weather_info_path: datasets/citibike/weather_info.json
+    zone_features:
+    - zones
+    - truck-features
+    - current-truck
+    - dataset-time
+  time_step:
+    initial_date: null
+    step_per_second: 1
+    step_size: 600
+    stop_date: null
+    stop_step: -1
+  trucks:
+    capacity: 20
+    initial_load_level: 0
+    initial_node_index: 0
+    move_speed_avg: 5.0
+    move_speed_std: 0.8
+    n_trucks: 30
+    reposition_time_avg: 60
+    reposition_time_std: 0.5
+    truck_features:
+    - position
+    - load
+    - busy
+  use_virtual_reset: true
+  zones:
+    action_space_can_wait: true
+    agent:
+      model_load:
+        load_model: false
+        load_model_config:
+          base_path: ''
+          mode: disk
+          path: null
+          use_ssh_tunnel: false
+      ppo:
+        activation_func: relu
+        add_batch_normalization: false
+        batch_size: 512
+        clip_range: 0.2
+        clip_range_vf: null
+        deterministic_eval: true
+        ent_coef: 0.05
+        force_constraints_swap: false
+        gae_lambda: 0.95
+        gamma: 0.9
+        log_std_init: 0
+        lr: 3.0e-06
+        lr_scheduler: constant
+        max_grad_norm: 0.5
+        n_epochs: 10
+        n_steps: 2048
+        normalize_advantage: true
+        override_activation_func: false
+        override_batch_normalization: false
+        policy_layers:
+        - activation: tanh
+          add_batch_normalization: true
+          units: 64
+        - activation: tanh
+          add_batch_normalization: true
+          units: 32
+        prevent_penalties: true
+        shared_net_cnn: []
+        shared_net_fcl:
+        - activation: tanh
+          add_batch_normalization: true
+          units: 512
+        - activation: tanh
+          add_batch_normalization: true
+          units: 512
+        target_kl: null
+        train_frequency: 50
+        train_steps_with_constraints: 0
+        value_layers:
+        - activation: tanh
+          add_batch_normalization: true
+          units: 64
+        - activation: tanh
+          add_batch_normalization: true
+          units: 32
+        vf_coef: 0.5
+      type: ppo-fs
+    enabled: true
+logger:
+  handlers:
+  - type: console
+    parameters: null
+  - type: file
+    parameters:
+      log_folder: bs_repositioning
+      log_basepath: logs
+  level: 10
+  name: global
+multi_run:
+  is_multi_run: true
+  multi_run_code: paris-free_ppo-full_month-scheduled_at=30-12-2023_10-13-46
+  multi_run_params:
+  - filename_key_val: seed=16
+    key: seed
+    key_short: seed
+    value: 16
+  - filename_key_val: agent-batch-size=512
+    key: agent-batch-size
+    key_short: agent-batch-size
+    value: 512
+  - filename_key_val: zone_agent-batch-size=512
+    key: zone_agent-batch-size
+    key_short: zone_agent-batch-size
+    value: 512
+  - filename_key_val: agent-n-steps=2048
+    key: agent-n-steps
+    key_short: agent-n-steps
+    value: 2048
+  - filename_key_val: zone_agent-n-steps=2048
+    key: zone_agent-n-steps
+    key_short: zone_agent-n-steps
+    value: 2048
+  - filename_key_val: agent-lr=0.0003
+    key: agent-lr
+    key_short: agent-lr
+    value: 0.0003
+random_seeds:
+  evaluation:
+  - 1000
+  training: 16
+redis:
+  enabled: true
+run:
+  debug_frequency: 1
+  eval_pool_size: 3
+  evaluation_episodes: 1
+  evaluation_frequency: 10
+  evaluation_steps: -1
+  info_frequency: 1
+  keep_metric: evaluation/avg/reward
+  metrics_window: 10
+  run_mode: training
+  training_steps: 2000
+  use_best_evaluation: true
+saver:
+  base_path: results-paper-new-state
+  checkpoint_frequency: 1000000
+  default_bucket: bikesharing
+  enabled: true
+  mode: disk
+  save_agent: true
+  save_name: ''
+  save_name_with_date: true
+  save_name_with_uuid: true
+  save_prefix: ''
+  stats_condensed: true
+  tensorboard:
+    enabled: false
+    save_model_graph: false
+    save_path: tensorboard
+version: 0.1.0

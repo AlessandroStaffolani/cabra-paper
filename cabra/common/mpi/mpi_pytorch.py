@@ -1,0 +1,41 @@
+import torch
+
+from cabra.common.mpi.mpi_tools import broadcast, mpi_avg, num_procs, proc_id
+
+
+def setup_pytorch_for_mpi():
+    """
+    Avoid slowdowns caused by each separate process's PyTorch using
+    more than its fair share of CPU resources.
+    """
+    # print('Proc %d: Reporting original number of Torch threads as %d.' % (proc_id(), torch.get_num_threads()),
+    #       flush=True)
+    if torch.get_num_threads() == 1:
+        return
+    fair_num_threads = max(int(torch.get_num_threads() / num_procs()), 1)
+    torch.set_num_threads(fair_num_threads)
+    # print('Proc %d: Reporting new number of Torch threads as %d.'%(proc_id(), torch.get_num_threads()), flush=True)
+
+
+def mpi_avg_grads(module):
+    """ Average contents of gradient buffers across MPI processes. """
+    if num_procs() == 1:
+        return
+    for p in module.parameters():
+        p_grad = p.grad.cpu()
+        p_grad_numpy = p_grad.numpy()  # numpy view of tensor data
+        avg_p_grad = mpi_avg(p_grad_numpy)
+        p_grad_numpy[:] = avg_p_grad[:]
+        p.grad.copy_(p_grad)
+
+
+def sync_params(module):
+    """ Sync all parameters of module across all MPI processes. """
+    if num_procs() == 1:
+        return
+    for p in module.parameters():
+        p_data = p.data.cpu()
+        p_numpy = p_data.numpy()
+        broadcast(p_numpy)
+        if p.device.type != 'cpu' and proc_id() != 0:
+            p.data.copy_(p_data)  # copy parameters back to GPU
